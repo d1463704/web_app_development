@@ -1,2 +1,3 @@
-# app/routes/__init__.py
-# 此套件包含所有 Flask 路由（Controller 層）
+from app.routes.recipes import recipes_bp
+
+__all__ = ['recipes_bp']
