@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}搜尋食譜 — 食譜收藏夾{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="text-center mb-5">
+            <h1 class="fw-bold mb-3">🔍 找尋靈感</h1>
+            <p class="text-muted">輸入冰箱現有的食材，看看能變出什麼美味料理！</p>
+        </div>
+
+        <!-- 搜尋欄 -->
+        <div class="card border-0 shadow-sm mb-5" style="border-radius: 15px;">
+            <div class="card-body p-4">
+                <form method="GET" action="{{ url_for('recipe.search') }}">
+                    <div class="input-group input-group-lg">
+                        <input type="text" class="form-control" name="q" value="{{ query }}" 
+                               placeholder="輸入食材，多個請用逗號隔開（如：雞肉, 洋蔥）" required>
+                        <button class="btn btn-primary px-4" type="submit">搜尋</button>
+                    </div>
+                    <div class="form-text mt-2 text-center">提示：系統會找出包含您輸入之所有食材的食譜。</div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 搜尋結果 -->
+        {% if query %}
+            <h4 class="mb-4">
+                「{{ query }}」的搜尋結果 
+                <span class="text-muted fs-6">（共 {{ recipes|length }} 筆）</span>
+            </h4>
+
+            {% if recipes %}
+                <div class="row row-cols-1 g-4">
+                    {% for r in recipes %}
+                    <div class="col">
+                        <div class="card recipe-card h-100">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title fw-bold mb-1">
+                                        <a href="{{ url_for('recipe.detail', id=r.id) }}" class="text-decoration-none text-dark">
+                                            {{ r.title }}
+                                        </a>
+                                    </h5>
+                                    <p class="card-text text-muted small mb-0">{{ r.description[:80] }}...</p>
+                                    <div class="mt-2">
+                                        <span class="badge badge-category rounded-pill">{{ r.category_name or '未分類' }}</span>
+                                    </div>
+                                </div>
+                                <a href="{{ url_for('recipe.detail', id=r.id) }}" class="btn btn-outline-primary">查看</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <img src="https://illustrations.popsy.co/gray/searching.svg" alt="No results" style="width: 200px;" class="mb-4 opacity-50">
+                    <p class="text-muted fs-5">哎呀！找不到符合這些食材的食譜。</p>
+                    <p class="text-muted">試試看減少食材關鍵字，或是換個詞搜尋看看！</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
