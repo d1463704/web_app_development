@@ -1,51 +1,45 @@
-"""
-app/__init__.py — Flask 應用程式工廠
-
-使用 Application Factory 模式建立 Flask App，
-負責初始化設定、初始化 SQLAlchemy、註冊 Blueprint。
-"""
-
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-# 建立全域 db 物件（在 models 裡 import 使用）
+# 初始化 SQLAlchemy
 db = SQLAlchemy()
 
-
 def create_app():
-    """
-    建立並設定 Flask 應用程式。
-
-    回傳:
-        Flask: 已設定完成的 Flask 應用程式實例
-    """
     app = Flask(__name__, instance_relative_config=True)
-
+    
     # 確保 instance 資料夾存在
-    os.makedirs(app.instance_path, exist_ok=True)
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
 
-    # 載入設定
+    # 資料庫設定
+    db_path = os.path.join(app.instance_path, 'database.db')
     app.config.from_mapping(
-        SECRET_KEY=os.environ.get('SECRET_KEY', 'dev'),
-        SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(app.instance_path, 'database.db'),
+        SECRET_KEY=os.getenv('SECRET_KEY', 'dev'),
+        SQLALCHEMY_DATABASE_URI=f'sqlite:///{db_path}',
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
     )
 
-    # 初始化 SQLAlchemy
+    # 初始化外掛
     db.init_app(app)
 
-    # 建立所有資料表（若不存在）
-    with app.app_context():
-        from app.models import Account, Category, Transaction, Budget  # noqa: F401
-        db.create_all()
+    # 註冊 Blueprints
+    from app.routes.main import main_bp
+    from app.routes.transactions import transactions_bp
+    from app.routes.accounts import accounts_bp
+    from app.routes.categories import categories_bp
+    from app.routes.budgets import budgets_bp
 
-    # 註冊路由 Blueprint
-    from app.routes import main_bp, transactions_bp, accounts_bp, categories_bp, budgets_bp
     app.register_blueprint(main_bp)
-    app.register_blueprint(transactions_bp)
-    app.register_blueprint(accounts_bp)
-    app.register_blueprint(categories_bp)
-    app.register_blueprint(budgets_bp)
+    app.register_blueprint(transactions_bp, url_prefix='/transactions')
+    app.register_blueprint(accounts_bp, url_prefix='/accounts')
+    app.register_blueprint(categories_bp, url_prefix='/categories')
+    app.register_blueprint(budgets_bp, url_prefix='/budgets')
+
+    # 自動建立資料表
+    with app.app_context():
+        db.create_all()
 
     return app

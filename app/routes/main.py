@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, send_file
+from flask import Blueprint, render_template, Response, stream_with_context
 from app.models import Transaction, Account, Budget, Category
 from datetime import datetime
 import csv
@@ -8,54 +8,55 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    """
-    儀表板首頁
-    顯示收支總覽、最近 5 筆交易與當月預算進度。
-    """
-    transactions = Transaction.query.order_by(Transaction.date.desc()).limit(5).all()
+    now = datetime.now()
+    period = now.strftime('%Y-%m')
+    
+    # 本月收支統計
+    transactions = Transaction.get_all()
+    this_month_txs = [tx for tx in transactions if tx.date.strftime('%Y-%m') == period]
+    
+    total_income = sum(tx.amount for tx in this_month_txs if tx.type == 'income')
+    total_expense = sum(tx.amount for tx in this_month_txs if tx.type == 'expense')
+    
+    # 帳戶列表
     accounts = Account.get_all()
     
-    # 計算本月收支
-    now = datetime.now()
-    current_month_txs = Transaction.query.filter(
-        Transaction.date >= datetime(now.year, now.month, 1)
-    ).all()
-    
-    total_income = sum(t.amount for t in current_month_txs if t.type == 'income')
-    total_expense = sum(t.amount for t in current_month_txs if t.type == 'expense')
+    # 最近 5 筆交易
+    recent_transactions = transactions[:5]
     
     return render_template('index.html', 
-                           transactions=transactions, 
-                           accounts=accounts,
                            total_income=total_income,
-                           total_expense=total_expense)
+                           total_expense=total_expense,
+                           accounts=accounts,
+                           transactions=recent_transactions)
 
 @main_bp.route('/export/csv')
 def export_csv():
-    """
-    匯出交易紀錄為 CSV 檔案
-    """
-    transactions = Transaction.get_all()
-    
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(['ID', '日期', '類型', '分類', '帳戶', '金額', '備註'])
-    
-    for tx in transactions:
-        writer.writerow([
-            tx.id, 
-            tx.date.strftime('%Y-%m-%d'), 
-            tx.type, 
-            tx.category.name if tx.category else 'N/A', 
-            tx.account.name if tx.account else 'N/A', 
-            tx.amount, 
-            tx.note
-        ])
-    
-    output.seek(0)
-    return send_file(
-        io.BytesIO(output.getvalue().encode('utf-8')),
-        mimetype='text/csv',
-        as_attachment=True,
-        download_name=f'transactions_{datetime.now().strftime("%Y%m%d")}.csv'
-    )
+    def generate():
+        data = io.StringIO()
+        writer = csv.writer(data)
+        
+        # 寫入標題
+        writer.writerow(['日期', '類型', '分類', '帳戶', '金額', '備註'])
+        yield data.getvalue()
+        data.seek(0)
+        data.truncate(0)
+        
+        # 寫入資料
+        transactions = Transaction.get_all()
+        for tx in transactions:
+            writer.writerow([
+                tx.date.strftime('%Y-%m-%d'),
+                '收入' if tx.type == 'income' else '支出',
+                tx.category.name if tx.category else '未分類',
+                tx.account.name if tx.account else '未知帳戶',
+                tx.amount,
+                tx.note or ''
+            ])
+            yield data.getvalue()
+            data.seek(0)
+            data.truncate(0)
+            
+    response = Response(stream_with_context(generate()), mimetype='text/csv')
+    response.headers.set('Content-Disposition', 'attachment', filename=f'transactions_{datetime.now().strftime("%Y%m%d")}.csv')
+    return response

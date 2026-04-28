@@ -1,67 +1,61 @@
 {% extends "base.html" %}
 
-{% block title %}分類管理 - 個人記帳簿{% endblock %}
+{% block title %}分類設定 - 個人記帳簿{% endblock %}
 
 {% block content %}
 <div class="animate-fade-in">
-    <div class="row g-4 mb-5">
+    <div class="row mb-5 align-items-center">
         <div class="col-md-12">
-            <h1 class="fw-bold mb-1">分類管理</h1>
-            <p class="text-muted">定義您的收入與支出類別，讓記帳更精確</p>
+            <h1 class="fw-bold mb-0">收支分類</h1>
+            <p class="text-muted">定義您的收入與支出分類，讓統計更精確</p>
         </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-4">
-            <div class="card p-4">
+            <div class="card border-0 p-4 sticky-top" style="top: 100px;">
                 <h5 class="fw-bold mb-4">新增分類</h5>
-                <form action="{{ url_for('categories.create') }}" method="POST">
+                <form method="POST" action="{{ url_for('categories.create') }}">
                     <div class="mb-3">
                         <label for="name" class="form-label small fw-bold text-muted">分類名稱</label>
-                        <input type="text" class="form-control rounded-3" id="name" name="name" required placeholder="例如：午餐">
+                        <input type="text" class="form-control bg-light border-0 rounded-4 py-2 fw-bold" id="name" name="name" required placeholder="例如：早餐、打工">
                     </div>
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-muted">類型</label>
-                        <select name="type" class="form-select rounded-3" required>
-                            <option value="expense">支出</option>
-                            <option value="income">收入</option>
-                        </select>
+                        <div class="btn-group w-100 rounded-4 overflow-hidden shadow-sm" role="group">
+                            <input type="radio" class="btn-check" name="type" id="type_expense" value="expense" checked>
+                            <label class="btn btn-outline-danger py-2 fw-bold" for="type_expense">支出</label>
+                            
+                            <input type="radio" class="btn-check" name="type" id="type_income" value="income">
+                            <label class="btn btn-outline-success py-2 fw-bold" for="type_income">收入</label>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 rounded-3 fw-bold">新增</button>
+                    <button type="submit" class="btn btn-primary w-100 rounded-4 py-3 fw-bold">建立分類</button>
                 </form>
             </div>
         </div>
 
         <div class="col-lg-8">
-            <div class="card p-4">
+            <div class="card border-0 p-4">
                 <h5 class="fw-bold mb-4">現有分類</h5>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="text-muted small">
-                            <tr>
-                                <th class="border-0">名稱</th>
-                                <th class="border-0">類型</th>
-                                <th class="border-0">建立日期</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for cat in categories %}
-                            <tr>
-                                <td class="fw-bold">{{ cat.name }}</td>
-                                <td>
-                                    <span class="badge {{ 'bg-success' if cat.type == 'income' else 'bg-danger' }} bg-opacity-10 {{ 'text-success' if cat.type == 'income' else 'text-danger' }} rounded-pill px-3">
-                                        {{ '收入' if cat.type == 'income' else '支出' }}
-                                    </span>
-                                </td>
-                                <td class="text-muted small">{{ cat.created_at.strftime('%Y/%m/%d') }}</td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="3" class="text-center py-4 text-muted">目前尚無分類</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="row g-3">
+                    {% for cat in categories %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-4 bg-light d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="p-2 rounded-3 me-3 {{ 'bg-success' if cat.type == 'income' else 'bg-danger' }} bg-opacity-10 {{ 'text-success' if cat.type == 'income' else 'text-danger' }}">
+                                    <i class="bi {{ 'bi-plus-circle' if cat.type == 'income' else 'bi-dash-circle' }}"></i>
+                                </div>
+                                <span class="fw-bold">{{ cat.name }}</span>
+                            </div>
+                            <span class="badge bg-white text-muted rounded-pill shadow-sm px-3">{{ '收入' if cat.type == 'income' else '支出' }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-5">
+                        <p class="text-muted">尚無自訂分類</p>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>

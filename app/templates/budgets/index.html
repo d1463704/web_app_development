@@ -4,67 +4,70 @@
 
 {% block content %}
 <div class="animate-fade-in">
-    <div class="row g-4 mb-5">
-        <div class="col-md-8">
-            <h1 class="fw-bold mb-1">預算進度 ({{ period }})</h1>
-            <p class="text-muted">監控您的月度預算，避免過度消費</p>
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-12">
+            <h1 class="fw-bold mb-0">月度預算進度 ({{ period }})</h1>
+            <p class="text-muted">掌握各項支出的執行狀況，避免超支</p>
         </div>
     </div>
 
     <div class="row g-4">
         {% for item in budgets_data %}
-        <div class="col-md-6">
-            <div class="card p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
                     <h5 class="fw-bold mb-0">{{ item.category.name }}</h5>
-                    <span class="text-muted small">
-                        ${{ "{:,.0f}".format(item.actual_expense) }} / 
-                        <span class="fw-bold text-main">${{ "{:,.0f}".format(item.budget_amount) }}</span>
+                    {% set percent = (item.actual_expense / item.budget_amount * 100) if item.budget_amount > 0 else (100 if item.actual_expense > 0 else 0) %}
+                    <span class="badge rounded-pill {{ 'bg-danger' if percent >= 100 else 'bg-warning' if percent >= 80 else 'bg-success' }} px-3">
+                        {{ percent|round(1) }}%
                     </span>
                 </div>
                 
-                {% set percent = (item.actual_expense / item.budget_amount * 100)|int if item.budget_amount > 0 else 0 %}
-                <div class="progress budget-progress mb-3">
-                    <div class="progress-bar {{ 'bg-danger' if percent >= 100 else 'bg-success' if percent < 80 else 'bg-warning' }}" 
-                         role="progressbar" style="width: {{ percent if percent <= 100 else 100 }}%" 
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">實際支出: <span class="fw-bold text-dark">${{ "{:,.0f}".format(item.actual_expense) }}</span></span>
+                    <span class="text-muted small">預算: <span class="fw-bold text-dark">${{ "{:,.0f}".format(item.budget_amount) }}</span></span>
+                </div>
+
+                <div class="progress progress-bar-custom mb-4">
+                    <div class="progress-bar {{ 'bg-danger' if percent >= 100 else 'bg-warning' if percent >= 80 else 'bg-success' }}" 
+                         role="progressbar" style="width: {{ [percent, 100]|min }}%" 
                          aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mt-2">
-                    <span class="small {{ 'text-danger' if item.remaining < 0 else 'text-success' }}">
-                        {{ '已超支 ' if item.remaining < 0 else '剩餘 ' }}${{ "{:,.2f}".format(item.remaining|abs) }}
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    <span class="small {{ 'text-danger fw-bold' if item.remaining < 0 else 'text-muted' }}">
+                        {{ '超支' if item.remaining < 0 else '剩餘' }}: ${{ "{:,.2f}".format(item.remaining|abs) }}
                     </span>
-                    <button class="btn btn-sm btn-light rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#budgetModal{{ item.category.id }}">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#budgetModal{{ item.category.id }}">
                         設定預算
                     </button>
                 </div>
             </div>
 
             <!-- Budget Modal -->
-            <div class="modal fade" id="budgetModal{{ item.category.id }}" tabindex="-1">
+            <div class="modal fade" id="budgetModal{{ item.category.id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content border-0 rounded-4 shadow">
-                        <form action="{{ url_for('budgets.update') }}" method="POST">
-                            <div class="modal-header border-0 pb-0">
-                                <h5 class="fw-bold">設定預算 - {{ item.category.name }}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold">設定預算 - {{ item.category.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="POST" action="{{ url_for('budgets.update') }}">
                             <div class="modal-body py-4">
                                 <input type="hidden" name="category_id" value="{{ item.category.id }}">
                                 <input type="hidden" name="period" value="{{ period }}">
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold text-muted">預算週期</label>
-                                    <input type="text" class="form-control bg-light border-0" value="{{ period }}" readonly>
-                                </div>
-                                <div class="mb-0">
-                                    <label for="amount{{ item.category.id }}" class="form-label small fw-bold text-muted">月度預算金額</label>
-                                    <input type="number" step="0.01" class="form-control rounded-3" id="amount{{ item.category.id }}" 
-                                           name="amount" value="{{ item.budget_amount }}" required>
+                                    <label for="amount{{ item.category.id }}" class="form-label small fw-bold text-muted">預算金額 ({{ period }})</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0 rounded-start-4 fw-bold">$</span>
+                                        <input type="number" step="0.01" class="form-control bg-light border-0 rounded-end-4 py-2 fw-bold" 
+                                               id="amount{{ item.category.id }}" name="amount" value="{{ item.budget_amount }}" required>
+                                    </div>
                                 </div>
                             </div>
                             <div class="modal-footer border-0 pt-0">
-                                <button type="button" class="btn btn-light rounded-3" data-bs-toggle="modal">取消</button>
-                                <button type="submit" class="btn btn-primary rounded-3 px-4">儲存</button>
+                                <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">取消</button>
+                                <button type="submit" class="btn btn-primary rounded-3 px-4">儲存設定</button>
                             </div>
                         </form>
                     </div>
