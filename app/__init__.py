@@ -41,7 +41,11 @@ def create_app():
         db.create_all()
 
     # 註冊路由 Blueprint
-    from app.routes import recipes_bp
-    app.register_blueprint(recipes_bp)
+    from app.routes import main_bp, transactions_bp, accounts_bp, categories_bp, budgets_bp
+    app.register_blueprint(main_bp)
+    app.register_blueprint(transactions_bp)
+    app.register_blueprint(accounts_bp)
+    app.register_blueprint(categories_bp)
+    app.register_blueprint(budgets_bp)
 
     return app
