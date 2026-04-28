@@ -3,9 +3,73 @@
 {% block title %}首頁 — 食譜收藏夾{% endblock %}
 
 {% block content %}
-<h1>食譜列表</h1>
+<div class="row">
+    <!-- 側欄：分類篩選 -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title fw-bold mb-3">食譜分類</h5>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('recipe.index') }}" 
+                       class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                        全部食譜
+                    </a>
+                    {% for cat in categories %}
+                    <a href="{{ url_for('recipe.index', category_id=cat.id) }}" 
+                       class="list-group-item list-group-item-action {% if current_category and current_category.id == cat.id %}active{% endif %}">
+                        {{ cat.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- TODO: 分類篩選側欄 -->
-<!-- TODO: 食譜卡片列表，迴圈顯示 recipes -->
-<!-- TODO: 每張卡片包含：標題、簡介、分類標籤、建立時間 -->
+    <!-- 主內容：食譜列表 -->
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">
+                {% if current_category %}
+                    {{ current_category.name }} 食譜
+                {% else %}
+                    所有食譜
+                {% endif %}
+            </h2>
+            <a href="{{ url_for('recipe.new') }}" class="btn btn-primary">+ 新增食譜</a>
+        </div>
+
+        {% if recipes %}
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for r in recipes %}
+                <div class="col">
+                    <div class="card h-100 recipe-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title fw-bold mb-0">
+                                    <a href="{{ url_for('recipe.detail', id=r.id) }}" class="text-decoration-none text-dark">
+                                        {{ r.title }}
+                                    </a>
+                                </h5>
+                                <span class="badge badge-category rounded-pill">{{ r.category_name or '未分類' }}</span>
+                            </div>
+                            <p class="card-text text-muted small mb-3">
+                                {{ r.description[:50] }}{% if r.description|length > 50 %}...{% endif %}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">{{ r.created_at[:10] }}</small>
+                                <a href="{{ url_for('recipe.detail', id=r.id) }}" class="btn btn-outline-primary btn-sm">查看詳情</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <p class="text-muted">目前還沒有食譜，快來新增第一道美味料理吧！</p>
+                <a href="{{ url_for('recipe.new') }}" class="btn btn-primary mt-2">新增食譜</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
