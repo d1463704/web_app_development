@@ -1,83 +1,85 @@
 {% extends "base.html" %}
 
-{% block title %}{{ recipe.title }} — 食譜收藏夾{% endblock %}
+{% block title %}{{ recipe.name }} - 食譜收藏夾{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb" class="mb-4">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ url_for('recipe.index') }}">首頁</a></li>
-    <li class="breadcrumb-item active">{{ recipe.title }}</li>
-  </ol>
-</nav>
+<div class="mb-3">
+    <a href="{{ url_for('recipes.index') }}" class="text-decoration-none text-secondary">← 返回列表</a>
+</div>
 
-<div class="row">
-    <div class="col-lg-8 mx-auto">
-        <div class="card border-0 shadow-sm overflow-hidden mb-4" style="border-radius: 20px;">
-            <div class="card-body p-5">
-                <!-- 標題與分類 -->
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div>
-                        <h1 class="fw-bold mb-2">{{ recipe.title }}</h1>
-                        <span class="badge badge-category fs-6 px-3 py-2 rounded-pill">
-                            {{ recipe.category_name or '未分類' }}
-                        </span>
-                        {% for tag in recipe.tags %}
-                            <span class="badge badge-tag fs-6 px-3 py-2 rounded-pill ms-1">{{ tag.name }}</span>
-                        {% endfor %}
-                    </div>
-                    <div class="d-flex gap-2">
-                        <a href="{{ url_for('recipe.edit', id=recipe.id) }}" class="btn btn-outline-secondary">編輯</a>
-                        <form action="{{ url_for('recipe.delete', id=recipe.id) }}" method="POST" 
-                              onsubmit="return confirm('確定要刪除這道食譜嗎？');">
-                            <button type="submit" class="btn btn-outline-danger">刪除</button>
-                        </form>
-                    </div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h2 class="card-title fw-bold text-primary mb-2">{{ recipe.name }}</h2>
+                <div class="text-muted d-flex align-items-center gap-2">
+                    {% if recipe.category %}<span class="badge bg-secondary">{{ recipe.category }}</span>{% endif %}
+                    <span class="badge bg-light text-dark border"><i class="bi bi-people"></i> {{ recipe.servings }} 人份</span>
+                    <small class="ms-2 border-start ps-2">建立於：{{ recipe.created_at.strftime('%Y-%m-%d') }}</small>
                 </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('recipes.edit', id=recipe.id) }}" class="btn btn-outline-secondary btn-sm px-3">編輯</a>
+                <a href="{{ url_for('recipes.delete_confirm', id=recipe.id) }}" class="btn btn-outline-danger btn-sm px-3">刪除</a>
+            </div>
+        </div>
+        {% if recipe.description %}
+        <div class="p-3 bg-light rounded text-secondary mt-3">
+            {{ recipe.description }}
+        </div>
+        {% endif %}
+    </div>
+</div>
 
-                <!-- 簡介 -->
-                {% if recipe.description %}
-                <p class="lead text-muted mb-5 border-start border-4 ps-3" style="border-color: #ff6b6b !important;">
-                    {{ recipe.description }}
-                </p>
-                {% endif %}
-
-                <div class="row">
-                    <!-- 材料清單 -->
-                    <div class="col-md-5 mb-4">
-                        <h4 class="fw-bold mb-4">🛒 需要材料</h4>
-                        <ul class="list-group list-group-flush">
-                            {% for ing in recipe.ingredients %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
-                                <span>{{ ing.name }}</span>
-                                <span class="text-muted fw-bold">{{ ing.amount }}</span>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-
-                    <!-- 製作步驟 -->
-                    <div class="col-md-7">
-                        <h4 class="fw-bold mb-4">👨‍🍳 製作步驟</h4>
-                        <div class="steps-container">
-                            {% set steps_list = recipe.steps.split('\n') %}
-                            {% for step in steps_list %}
-                                {% if step.strip() %}
-                                <div class="d-flex mb-4">
-                                    <div class="me-3">
-                                        <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle fw-bold" 
-                                              style="width: 30px; height: 30px;">
-                                            {{ loop.index }}
-                                        </span>
-                                    </div>
-                                    <div class="pt-1">
-                                        <p class="mb-0 fs-5">{{ step.strip() }}</p>
-                                    </div>
-                                </div>
-                                {% endif %}
-                            {% endfor %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h4 class="fw-bold text-dark mb-0">所需材料</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for ingredient in recipe.ingredients %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-light">
+                        <span class="fw-medium text-dark">{{ ingredient.name }}</span>
+                        <span class="text-primary fw-bold bg-light px-2 py-1 rounded">{{ ingredient.amount }}</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted px-0">尚未新增材料</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h4 class="fw-bold text-dark mb-0">操作步驟</h4>
+            </div>
+            <div class="card-body pt-4">
+                {% for step in recipe.steps %}
+                <div class="d-flex mb-4 position-relative">
+                    <div class="me-4 d-flex flex-column align-items-center">
+                        <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center fw-bold" style="width: 32px; height: 32px; z-index: 1;">
+                            {{ loop.index }}
                         </div>
+                        {% if not loop.last %}
+                        <div class="bg-light w-100" style="width: 2px; height: 100%; position: absolute; top: 32px; left: 15px;"></div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1 bg-light rounded p-3 mb-1 w-100">
+                        <p class="mb-2 text-dark fs-6">{{ step.instruction }}</p>
+                        {% if step.wait_minutes > 0 %}
+                        <div class="d-inline-flex align-items-center bg-warning bg-opacity-25 text-warning-emphasis px-2 py-1 rounded-pill mt-1" style="font-size: 0.85rem;">
+                            <span class="me-1">⏱️</span> 需等待 <strong class="mx-1">{{ step.wait_minutes }}</strong> 分鐘
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
+                {% else %}
+                <p class="text-muted text-center py-4">尚未新增步驟</p>
+                {% endfor %}
             </div>
         </div>
     </div>

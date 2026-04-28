@@ -1,145 +1,161 @@
 {% extends "base.html" %}
 
-{% block title %}
-    {% if recipe %}編輯食譜 - {{ recipe.title }}{% else %}新增食譜{% endif %} — 食譜收藏夾
-{% endblock %}
+{% block title %}{{ '編輯' if action == 'edit' else '新增' }}食譜 - 食譜收藏夾{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-10 mx-auto">
-        <div class="card border-0 shadow-sm" style="border-radius: 20px;">
-            <div class="card-body p-5">
-                <h2 class="fw-bold mb-4">
-                    {% if recipe %}📝 編輯食譜{% else %}✨ 新增食譜{% endif %}
-                </h2>
-
-                <form method="POST" action="{% if recipe %}{{ url_for('recipe.update', id=recipe.id) }}{% else %}{{ url_for('recipe.create') }}{% endif %}">
-                    <div class="row g-4">
-                        <!-- 基本資訊 -->
-                        <div class="col-md-7">
-                            <div class="mb-3">
-                                <label for="title" class="form-label fw-bold">食譜名稱 <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-lg" id="title" name="title" 
-                                       value="{{ recipe.title if recipe else '' }}" placeholder="例如：經典台式滷肉飯" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="category_id" class="form-label fw-bold">分類</label>
-                                <select class="form-select" id="category_id" name="category_id">
-                                    <option value="">請選擇分類</option>
-                                    {% for cat in categories %}
-                                    <option value="{{ cat.id }}" 
-                                            {% if recipe and recipe.category_id == cat.id %}selected{% endif %}>
-                                        {{ cat.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="description" class="form-label fw-bold">食譜簡介</label>
-                                <textarea class="form-control" id="description" name="description" rows="3" 
-                                          placeholder="簡單描述這道菜的特色...">{{ recipe.description if recipe else '' }}</textarea>
-                            </div>
-                        </div>
-
-                        <!-- 材料清單 -->
-                        <div class="col-md-5">
-                            <label class="form-label fw-bold mb-3">🛒 材料清單 <span class="text-danger">*</span></label>
-                            <div id="ingredients-container">
-                                {% if recipe and recipe.ingredients %}
-                                    {% for ing in recipe.ingredients %}
-                                    <div class="input-group mb-2 ingredient-row">
-                                        <input type="text" class="form-control" name="ingredient_name[]" placeholder="材料名" value="{{ ing.name }}" required>
-                                        <input type="text" class="form-control w-25" name="ingredient_amount[]" placeholder="份量" value="{{ ing.amount }}">
-                                        <button class="btn btn-outline-danger remove-ing" type="button">×</button>
-                                    </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="input-group mb-2 ingredient-row">
-                                        <input type="text" class="form-control" name="ingredient_name[]" placeholder="材料名" required>
-                                        <input type="text" class="form-control w-25" name="ingredient_amount[]" placeholder="份量">
-                                        <button class="btn btn-outline-danger remove-ing" type="button" style="display:none;">×</button>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <button type="button" class="btn btn-outline-primary btn-sm mt-2 w-100" id="add-ingredient">+ 新增材料</button>
-                        </div>
-
-                        <!-- 製作步驟 -->
-                        <div class="col-12">
-                            <div class="mb-3">
-                                <label for="steps" class="form-label fw-bold">👨‍🍳 製作步驟 <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="steps" name="steps" rows="6" 
-                                          placeholder="請輸入製作步驟，每一步請換行輸入..." required>{{ recipe.steps if recipe else '' }}</textarea>
-                                <div class="form-text">提示：每行會自動轉換為一個步驟。</div>
-                            </div>
-                        </div>
-
-                        <!-- 標籤 -->
-                        <div class="col-12">
-                            <div class="mb-4">
-                                <label for="tags" class="form-label fw-bold">🏷️ 標籤</label>
-                                <input type="text" class="form-control" id="tags" name="tags" 
-                                       value="{{ recipe.tags|map(attribute='name')|join(', ') if recipe and recipe.tags else '' }}" 
-                                       placeholder="例如：低卡, 快速料理, 適合派對 (以逗號分隔)">
-                            </div>
-                        </div>
-
-                        <div class="col-12 d-flex gap-3">
-                            <button type="submit" class="btn btn-primary btn-lg px-5">
-                                {% if recipe %}儲存變更{% else %}建立食譜{% endif %}
-                            </button>
-                            <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg px-4">取消</a>
-                        </div>
+<div class="card border-0 shadow-sm max-w-800 mx-auto mb-5">
+    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+        <h3 class="fw-bold text-primary mb-0">{{ '📝 編輯食譜' if action == 'edit' else '✨ 新增食譜' }}</h3>
+    </div>
+    <div class="card-body p-4">
+        <form action="{{ url_for('recipes.update', id=recipe.id) if action == 'edit' else url_for('recipes.create') }}" method="POST">
+            
+            <div class="bg-light p-4 rounded mb-4">
+                <h5 class="fw-bold mb-3 text-dark">基本資訊</h5>
+                <div class="mb-3">
+                    <label for="name" class="form-label fw-medium">食譜名稱 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ recipe.name if recipe else '' }}" placeholder="例如：台式紅燒肉" required>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="servings" class="form-label fw-medium">份量 (人份)</label>
+                        <input type="number" class="form-control" id="servings" name="servings" value="{{ recipe.servings if recipe else '2' }}" min="1">
                     </div>
-                </form>
+                    <div class="col-md-6">
+                        <label for="category" class="form-label fw-medium">分類</label>
+                        <input type="text" class="form-control" id="category" name="category" value="{{ recipe.category if recipe else '' }}" placeholder="例如：台式、甜點、家常菜">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="description" class="form-label fw-medium">簡介與備註</label>
+                    <textarea class="form-control" id="description" name="description" rows="2" placeholder="這道菜背後的小故事，或是特殊的小秘訣...">{{ recipe.description if recipe else '' }}</textarea>
+                </div>
             </div>
-        </div>
+
+            <div class="bg-light p-4 rounded mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark">所需材料</h5>
+                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" id="add-ingredient-btn">+ 新增材料</button>
+                </div>
+                <div id="ingredients-container">
+                    {% if recipe and recipe.ingredients %}
+                        {% for ingredient in recipe.ingredients %}
+                        <div class="row g-2 mb-2 ingredient-row align-items-center">
+                            <div class="col-6 col-md-7">
+                                <input type="text" class="form-control bg-white" name="ingredient_name[]" value="{{ ingredient.name }}" placeholder="材料名稱 (例: 豬五花)" required>
+                            </div>
+                            <div class="col-4">
+                                <input type="text" class="form-control bg-white" name="ingredient_amount[]" value="{{ ingredient.amount }}" placeholder="份量 (例: 300g)">
+                            </div>
+                            <div class="col-2 col-md-1 text-end">
+                                <button type="button" class="btn btn-outline-danger w-100 remove-row-btn">✕</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="row g-2 mb-2 ingredient-row align-items-center">
+                            <div class="col-6 col-md-7">
+                                <input type="text" class="form-control bg-white" name="ingredient_name[]" placeholder="材料名稱 (例: 豬五花)" required>
+                            </div>
+                            <div class="col-4">
+                                <input type="text" class="form-control bg-white" name="ingredient_amount[]" placeholder="份量 (例: 300g)">
+                            </div>
+                            <div class="col-2 col-md-1 text-end">
+                                <button type="button" class="btn btn-outline-danger w-100 remove-row-btn">✕</button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bg-light p-4 rounded mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark">操作步驟</h5>
+                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" id="add-step-btn">+ 新增步驟</button>
+                </div>
+                <div id="steps-container">
+                    {% if recipe and recipe.steps %}
+                        {% for step in recipe.steps %}
+                        <div class="row g-2 mb-3 step-row align-items-start">
+                            <div class="col-12 col-md-7">
+                                <textarea class="form-control bg-white" name="step_instruction[]" rows="2" placeholder="詳細步驟說明..." required>{{ step.instruction }}</textarea>
+                            </div>
+                            <div class="col-10 col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">⏱️ 等待</span>
+                                    <input type="number" class="form-control bg-white border-start-0 ps-0" name="step_wait_minutes[]" value="{{ step.wait_minutes }}" min="0" placeholder="0">
+                                    <span class="input-group-text bg-white">分鐘</span>
+                                </div>
+                            </div>
+                            <div class="col-2 col-md-1 text-end">
+                                <button type="button" class="btn btn-outline-danger w-100 h-100 remove-row-btn">✕</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="row g-2 mb-3 step-row align-items-start">
+                            <div class="col-12 col-md-7">
+                                <textarea class="form-control bg-white" name="step_instruction[]" rows="2" placeholder="詳細步驟說明..." required></textarea>
+                            </div>
+                            <div class="col-10 col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">⏱️ 等待</span>
+                                    <input type="number" class="form-control bg-white border-start-0 ps-0" name="step_wait_minutes[]" value="0" min="0" placeholder="0">
+                                    <span class="input-group-text bg-white">分鐘</span>
+                                </div>
+                            </div>
+                            <div class="col-2 col-md-1 text-end">
+                                <button type="button" class="btn btn-outline-danger w-100 h-100 remove-row-btn">✕</button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <a href="{{ url_for('recipes.index') if not recipe else url_for('recipes.detail', id=recipe.id) }}" class="btn btn-light px-4 me-2 border">取消</a>
+                <button type="submit" class="btn btn-primary px-5 fw-bold">儲存食譜</button>
+            </div>
+        </form>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const container = document.getElementById('ingredients-container');
-        const addButton = document.getElementById('add-ingredient');
-
-        // 新增材料列
-        addButton.addEventListener('click', function() {
-            const firstRow = container.querySelector('.ingredient-row');
-            const newRow = firstRow.cloneNode(true);
-            
-            // 清空新列的內容
-            newRow.querySelectorAll('input').forEach(input => input.value = '');
-            
-            // 顯示刪除按鈕
-            const removeBtn = newRow.querySelector('.remove-ing');
-            removeBtn.style.display = 'block';
-            
-            container.appendChild(newRow);
-            updateRemoveButtons();
-        });
-
-        // 刪除材料列
-        container.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-ing')) {
-                const row = e.target.closest('.ingredient-row');
-                if (container.querySelectorAll('.ingredient-row').length > 1) {
-                    row.remove();
-                    updateRemoveButtons();
+document.addEventListener('DOMContentLoaded', function() {
+    function setupRemoveButtons(containerId) {
+        document.getElementById(containerId).addEventListener('click', function(e) {
+            if(e.target && e.target.classList.contains('remove-row-btn')) {
+                const rows = this.querySelectorAll(containerId === 'ingredients-container' ? '.ingredient-row' : '.step-row');
+                if(rows.length > 1) {
+                    e.target.closest('.row').remove();
+                } else {
+                    alert('至少需要保留一行資料喔！');
                 }
             }
         });
+    }
 
-        function updateRemoveButtons() {
-            const rows = container.querySelectorAll('.ingredient-row');
-            const firstRemoveBtn = rows[0].querySelector('.remove-ing');
-            if (rows.length === 1) {
-                firstRemoveBtn.style.display = 'none';
-            } else {
-                firstRemoveBtn.style.display = 'block';
-            }
-        }
+    setupRemoveButtons('ingredients-container');
+    setupRemoveButtons('steps-container');
+
+    document.getElementById('add-ingredient-btn').addEventListener('click', function() {
+        const container = document.getElementById('ingredients-container');
+        const firstRow = container.querySelector('.ingredient-row');
+        const newRow = firstRow.cloneNode(true);
+        newRow.querySelectorAll('input').forEach(input => input.value = '');
+        container.appendChild(newRow);
     });
+
+    document.getElementById('add-step-btn').addEventListener('click', function() {
+        const container = document.getElementById('steps-container');
+        const firstRow = container.querySelector('.step-row');
+        const newRow = firstRow.cloneNode(true);
+        newRow.querySelector('textarea').value = '';
+        newRow.querySelector('input[type="number"]').value = '0';
+        container.appendChild(newRow);
+    });
+});
 </script>
 {% endblock %}
