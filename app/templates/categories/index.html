@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}分類管理 - 個人記帳簿{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="row g-4 mb-5">
+        <div class="col-md-12">
+            <h1 class="fw-bold mb-1">分類管理</h1>
+            <p class="text-muted">定義您的收入與支出類別，讓記帳更精確</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card p-4">
+                <h5 class="fw-bold mb-4">新增分類</h5>
+                <form action="{{ url_for('categories.create') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label small fw-bold text-muted">分類名稱</label>
+                        <input type="text" class="form-control rounded-3" id="name" name="name" required placeholder="例如：午餐">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">類型</label>
+                        <select name="type" class="form-select rounded-3" required>
+                            <option value="expense">支出</option>
+                            <option value="income">收入</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-3 fw-bold">新增</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <h5 class="fw-bold mb-4">現有分類</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="text-muted small">
+                            <tr>
+                                <th class="border-0">名稱</th>
+                                <th class="border-0">類型</th>
+                                <th class="border-0">建立日期</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in categories %}
+                            <tr>
+                                <td class="fw-bold">{{ cat.name }}</td>
+                                <td>
+                                    <span class="badge {{ 'bg-success' if cat.type == 'income' else 'bg-danger' }} bg-opacity-10 {{ 'text-success' if cat.type == 'income' else 'text-danger' }} rounded-pill px-3">
+                                        {{ '收入' if cat.type == 'income' else '支出' }}
+                                    </span>
+                                </td>
+                                <td class="text-muted small">{{ cat.created_at.strftime('%Y/%m/%d') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">目前尚無分類</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,2 +1,109 @@
-/* style.css — 食譜收藏夾全站樣式 */
-/* TODO: 實作階段補充完整樣式 */
+:root {
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --bg-color: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --glass-border: rgba(255, 255, 255, 0.3);
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+.navbar {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 1rem 0;
+}
+
+.navbar-brand {
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 1.5rem;
+}
+
+.card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 12px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 80px;
+    height: 80px;
+    background: var(--primary-gradient);
+    opacity: 0.1;
+    border-radius: 50%;
+}
+
+.transaction-item {
+    padding: 1rem;
+    border-radius: 15px;
+    margin-bottom: 0.8rem;
+    background: white;
+    border: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.transaction-item:hover {
+    border-color: #e2e8f0;
+    background: #fdfdfd;
+}
+
+.income-text { color: var(--success-color); font-weight: 700; }
+.expense-text { color: var(--danger-color); font-weight: 700; }
+
+.budget-progress {
+    height: 10px;
+    border-radius: 5px;
+    background-color: #e2e8f0;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

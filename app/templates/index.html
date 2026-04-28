@@ -1,53 +1,108 @@
 {% extends "base.html" %}
 
-{% block title %}首頁 - 食譜收藏夾{% endblock %}
+{% block title %}儀表板 - 個人記帳簿{% endblock %}
 
 {% block content %}
-<div class="row mb-4 align-items-center">
-    <div class="col-md-6">
-        <h2 class="fw-bold text-dark">我的食譜</h2>
+<div class="animate-fade-in">
+    <div class="row g-4 mb-5">
+        <div class="col-md-8">
+            <h1 class="fw-bold mb-1">您好，歡迎回來！</h1>
+            <p class="text-muted">這是您本月的財務概況總覽</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('main.export_csv') }}" class="btn btn-outline-secondary rounded-4 px-4">
+                <i class="bi bi-download me-1"></i>匯出 CSV
+            </a>
+        </div>
     </div>
-    <div class="col-md-6">
-        <form action="{{ url_for('recipes.index') }}" method="get" class="d-flex shadow-sm rounded">
-            <input type="text" name="q" class="form-control border-0" placeholder="搜尋食譜名稱..." value="{{ q }}">
-            <button type="submit" class="btn btn-primary px-4">搜尋</button>
-            {% if q %}
-            <a href="{{ url_for('recipes.index') }}" class="btn btn-outline-secondary ms-2">清除</a>
-            {% endif %}
-        </form>
-    </div>
-</div>
 
-{% if recipes %}
-<div class="row row-cols-1 row-cols-md-3 g-4">
-    {% for recipe in recipes %}
-    <div class="col">
-        <div class="card h-100 border-0 shadow-sm transition-hover">
-            <div class="card-body">
-                <h5 class="card-title fw-bold text-primary">{{ recipe.name }}</h5>
-                <h6 class="card-subtitle mb-3 text-muted">
-                    {% if recipe.category %}<span class="badge bg-secondary me-1">{{ recipe.category }}</span>{% endif %}
-                    <span class="badge bg-light text-dark border">{{ recipe.servings }} 人份</span>
-                </h6>
-                <p class="card-text text-secondary">{{ recipe.description or '無簡介' }}</p>
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card stat-card p-4 h-100">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-4 me-3 text-primary">
+                        <i class="bi bi-graph-up-arrow fs-4"></i>
+                    </div>
+                    <h6 class="mb-0 text-muted fw-bold">本月總收入</h6>
+                </div>
+                <h2 class="fw-bold income-text mb-0">${{ "{:,.2f}".format(total_income) }}</h2>
             </div>
-            <div class="card-footer bg-white border-top-0 pt-0">
-                <a href="{{ url_for('recipes.detail', id=recipe.id) }}" class="btn btn-outline-primary btn-sm w-100">查看詳細</a>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card p-4 h-100">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-danger bg-opacity-10 p-3 rounded-4 me-3 text-danger">
+                        <i class="bi bi-graph-down-arrow fs-4"></i>
+                    </div>
+                    <h6 class="mb-0 text-muted fw-bold">本月總支出</h6>
+                </div>
+                <h2 class="fw-bold expense-text mb-0">${{ "{:,.2f}".format(total_expense) }}</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card p-4 h-100">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success bg-opacity-10 p-3 rounded-4 me-3 text-success">
+                        <i class="bi bi-safe fs-4"></i>
+                    </div>
+                    <h6 class="mb-0 text-muted fw-bold">帳戶總資產</h6>
+                </div>
+                <h2 class="fw-bold text-main mb-0">${{ "{:,.2f}".format(accounts|sum(attribute='balance')) }}</h2>
             </div>
         </div>
     </div>
-    {% endfor %}
-</div>
-{% else %}
-<div class="text-center py-5 mt-4 bg-white rounded shadow-sm border border-light">
-    <h4 class="text-muted fw-bold mb-3">找不到相關食譜</h4>
-    <p class="text-secondary mb-4">看來你的食譜收藏夾裡還沒有東西呢！</p>
-    <a href="{{ url_for('recipes.new') }}" class="btn btn-primary px-4 py-2">立即新增一筆！</a>
-</div>
-{% endif %}
 
-<style>
-.transition-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.transition-hover:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
-</style>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">最近 5 筆交易</h5>
+                    <a href="{{ url_for('transactions.index') }}" class="text-decoration-none small fw-bold">查看全部</a>
+                </div>
+                {% if transactions %}
+                    {% for tx in transactions %}
+                    <div class="transaction-item d-flex align-items-center">
+                        <div class="bg-light p-2 rounded-3 me-3 text-secondary">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 fw-bold">{{ tx.category.name if tx.category else '未分類' }}</h6>
+                            <small class="text-muted">{{ tx.date.strftime('%m/%d') }} · {{ tx.note if tx.note else '無備註' }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="{{ 'income-text' if tx.type == 'income' else 'expense-text' }}">
+                                {{ '+' if tx.type == 'income' else '-' }}${{ "{:,.2f}".format(tx.amount) }}
+                            </span>
+                            <div class="small text-muted">{{ tx.account.name if tx.account else '未知帳戶' }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox text-muted fs-1 mb-3 d-block"></i>
+                        <p class="text-muted">尚無交易紀錄</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card p-4 h-100">
+                <h5 class="fw-bold mb-4">帳戶餘額</h5>
+                {% for acc in accounts %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-credit-card me-2 text-primary"></i>
+                        <span class="text-muted">{{ acc.name }}</span>
+                    </div>
+                    <span class="fw-bold">${{ "{:,.2f}".format(acc.balance) }}</span>
+                </div>
+                {% endfor %}
+                <hr class="text-muted opacity-10">
+                <div class="mt-auto">
+                    <a href="{{ url_for('accounts.index') }}" class="btn btn-light w-100 rounded-4 fw-bold">管理帳戶</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

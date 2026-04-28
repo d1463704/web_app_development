@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '編輯' if transaction else '新增' }}交易 - 個人記帳簿{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in row justify-content-center">
+    <div class="col-md-6">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{{ url_for('transactions.index') }}" class="btn btn-light rounded-circle me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h2 class="fw-bold mb-0">{{ '編輯交易紀錄' if transaction else '新增交易紀錄' }}</h2>
+        </div>
+
+        <div class="card p-4">
+            <form action="{{ url_for('transactions.update', id=transaction.id) if transaction else url_for('transactions.create') }}" method="POST">
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-muted">收支類型</label>
+                    <div class="d-flex gap-3">
+                        <input type="radio" class="btn-check" name="type" id="type_expense" value="expense" 
+                               {{ 'checked' if (not transaction or transaction.type == 'expense') }}>
+                        <label class="btn btn-outline-danger w-50 rounded-4 py-2" for="type_expense">
+                            <i class="bi bi-dash-circle me-2"></i>支出
+                        </label>
+
+                        <input type="radio" class="btn-check" name="type" id="type_income" value="income"
+                               {{ 'checked' if (transaction and transaction.type == 'income') }}>
+                        <label class="btn btn-outline-success w-50 rounded-4 py-2" for="type_income">
+                            <i class="bi bi-plus-circle me-2"></i>收入
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="amount" class="form-label fw-bold text-muted">金額</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 rounded-start-4">$</span>
+                        <input type="number" step="0.01" class="form-control bg-light border-0 rounded-end-4 fs-4 fw-bold" 
+                               id="amount" name="amount" value="{{ transaction.amount if transaction else '' }}" required placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="category_id" class="form-label fw-bold text-muted">分類</label>
+                        <select class="form-select rounded-4 border-0 bg-light" id="category_id" name="category_id" required>
+                            <option value="">請選擇...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {{ 'selected' if transaction and transaction.category_id == cat.id }}>
+                                {{ cat.name }} ({{ '收' if cat.type == 'income' else '支' }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="account_id" class="form-label fw-bold text-muted">帳戶</label>
+                        <select class="form-select rounded-4 border-0 bg-light" id="account_id" name="account_id" required>
+                            <option value="">請選擇...</option>
+                            {% for acc in accounts %}
+                            <option value="{{ acc.id }}" {{ 'selected' if transaction and transaction.account_id == acc.id }}>
+                                {{ acc.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="date" class="form-label fw-bold text-muted">日期</label>
+                    <input type="date" class="form-control rounded-4 border-0 bg-light" id="date" name="date" 
+                           value="{{ transaction.date.strftime('%Y-%m-%d') if transaction else now_date }}" required>
+                </div>
+
+                <div class="mb-5">
+                    <label for="note" class="form-label fw-bold text-muted">備註</label>
+                    <textarea class="form-control rounded-4 border-0 bg-light" id="note" name="note" rows="3" placeholder="紀錄一點細節...">{{ transaction.note if transaction else '' }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 rounded-4 py-3 fw-bold shadow-sm">
+                    {{ '確認更新' if transaction else '確認新增' }}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

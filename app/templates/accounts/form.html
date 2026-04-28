@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '編輯' if account else '新增' }}帳戶 - 個人記帳簿{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in row justify-content-center">
+    <div class="col-md-5">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{{ url_for('accounts.index') }}" class="btn btn-light rounded-circle me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h2 class="fw-bold mb-0">{{ '編輯帳戶' if account else '建立新帳戶' }}</h2>
+        </div>
+
+        <div class="card p-4">
+            <form action="{{ url_for('accounts.update', id=account.id) if account else url_for('accounts.create') }}" method="POST">
+                <div class="mb-4">
+                    <label for="name" class="form-label fw-bold text-muted">帳戶名稱</label>
+                    <input type="text" class="form-control rounded-4 border-0 bg-light py-2" id="name" name="name" 
+                           value="{{ account.name if account else '' }}" required placeholder="例如：我的錢包">
+                </div>
+
+                <div class="mb-5">
+                    <label for="balance" class="form-label fw-bold text-muted">初始餘額</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 rounded-start-4">$</span>
+                        <input type="number" step="0.01" class="form-control bg-light border-0 rounded-end-4 fs-4 fw-bold" 
+                               id="balance" name="balance" value="{{ account.balance if account else '0.00' }}" required>
+                    </div>
+                    <small class="text-muted d-block mt-2">建立帳戶時的初始金錢額度。</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 rounded-4 py-3 fw-bold shadow-sm">
+                    {{ '儲存變更' if account else '確認建立' }}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
