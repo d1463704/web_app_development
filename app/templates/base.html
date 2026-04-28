@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}食譜收藏夾{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- 導覽列 -->
+    <nav>
+        <a href="{{ url_for('recipe.index') }}">🍳 食譜收藏夾</a>
+        <div>
+            <a href="{{ url_for('recipe.index') }}">首頁</a>
+            <a href="{{ url_for('recipe.new') }}">新增食譜</a>
+            <a href="{{ url_for('recipe.search') }}">搜尋食譜</a>
+        </div>
+    </nav>
+
+    <!-- 主要內容 -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 頁尾 -->
+    <footer>
+        <p>&copy; 2026 食譜收藏夾 — Flask 學習專案</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

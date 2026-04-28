@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}搜尋食譜 — 食譜收藏夾{% endblock %}
+
+{% block content %}
+<h1>搜尋食譜</h1>
+
+<form method="GET" action="{{ url_for('recipe.search') }}">
+    <!-- TODO: 食材關鍵字輸入欄位（name="q"） -->
+    <!-- TODO: 搜尋按鈕 -->
+</form>
+
+<!-- TODO: 搜尋結果列表（迴圈 recipes） -->
+<!-- TODO: 無結果時顯示提示訊息 -->
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if recipe %}編輯食譜{% else %}新增食譜{% endif %} — 食譜收藏夾
+{% endblock %}
+
+{% block content %}
+<h1>{% if recipe %}編輯食譜{% else %}新增食譜{% endif %}</h1>
+
+<form method="POST" action="{% if recipe %}{{ url_for('recipe.update', id=recipe.id) }}{% else %}{{ url_for('recipe.create') }}{% endif %}">
+    <!-- TODO: 食譜名稱 input -->
+    <!-- TODO: 食譜簡介 textarea -->
+    <!-- TODO: 分類下拉選單（迴圈 categories） -->
+    <!-- TODO: 材料欄位（動態新增/刪除，name/amount） -->
+    <!-- TODO: 製作步驟 textarea -->
+    <!-- TODO: 標籤 input（逗號分隔） -->
+    <!-- TODO: 送出按鈕 -->
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<!-- TODO: 動態新增/刪除材料欄位的 JavaScript -->
+{% endblock %}
