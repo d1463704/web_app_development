@@ -1,2 +1,5 @@
-# app/models/__init__.py
-# 此套件包含所有資料庫模型（Model 層）
+from app.models.recipe import Recipe
+from app.models.ingredient import Ingredient
+from app.models.step import Step
+
+__all__ = ['Recipe', 'Ingredient', 'Step']
