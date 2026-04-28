@@ -1,33 +1,41 @@
--- 食譜收藏夾 - 資料庫 Schema
--- SQLite 語法
+-- 資料庫建表語法 (SQLite)
 
--- 食譜表
-CREATE TABLE IF NOT EXISTS recipes (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    name        TEXT    NOT NULL,
-    description TEXT,
-    servings    INTEGER DEFAULT 2,
-    category    TEXT,
-    created_at  DATETIME DEFAULT (datetime('now', 'localtime')),
-    updated_at  DATETIME DEFAULT (datetime('now', 'localtime'))
+-- 帳戶表
+CREATE TABLE IF NOT EXISTS account (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    balance REAL DEFAULT 0.0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 材料表
-CREATE TABLE IF NOT EXISTS ingredients (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    recipe_id   INTEGER NOT NULL,
-    name        TEXT    NOT NULL,
-    amount      TEXT,
-    order_no    INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+-- 分類表
+CREATE TABLE IF NOT EXISTS category (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 步驟表（含等待時間）
-CREATE TABLE IF NOT EXISTS steps (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    recipe_id    INTEGER NOT NULL,
-    order_no     INTEGER NOT NULL,
-    instruction  TEXT    NOT NULL,
-    wait_minutes INTEGER DEFAULT 0,
-    FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+-- 交易表
+CREATE TABLE IF NOT EXISTS "transaction" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    amount REAL NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
+    note TEXT,
+    date DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id) REFERENCES account (id),
+    FOREIGN KEY (category_id) REFERENCES category (id)
+);
+
+-- 預算表
+CREATE TABLE IF NOT EXISTS budget (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id INTEGER NOT NULL,
+    amount REAL NOT NULL,
+    period TEXT NOT NULL, -- 格式: YYYY-MM
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES category (id)
 );

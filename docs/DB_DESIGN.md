@@ -1,89 +1,84 @@
-# 資料庫設計文件 - 食譜收藏夾
+# 資料庫設計文件 - 個人記帳簿系統
 
 ## 1. ER 圖（實體關係圖）
 
 ```mermaid
 erDiagram
-    RECIPE {
+    ACCOUNT ||--o{ TRANSACTION : "擁有"
+    CATEGORY ||--o{ TRANSACTION : "分類"
+    CATEGORY ||--o{ BUDGET : "設定"
+
+    ACCOUNT {
         int id PK
-        string name
-        string description
-        int servings
-        string category
+        string name "帳戶名稱 (如: 現金, 銀行, 信用卡)"
+        float balance "當前餘額"
         datetime created_at
-        datetime updated_at
-    }
-    INGREDIENT {
-        int id PK
-        int recipe_id FK
-        string name
-        string amount
-        int order_no
-    }
-    STEP {
-        int id PK
-        int recipe_id FK
-        int order_no
-        string instruction
-        int wait_minutes
     }
 
-    RECIPE ||--o{ INGREDIENT : "包含（一對多）"
-    RECIPE ||--o{ STEP : "包含（一對多）"
+    CATEGORY {
+        int id PK
+        string name "分類名稱 (如: 飲食, 交通, 薪資)"
+        string type "類型 (income / expense)"
+        datetime created_at
+    }
+
+    TRANSACTION {
+        int id PK
+        int account_id FK "所屬帳戶"
+        int category_id FK "所屬分類"
+        float amount "金額"
+        string type "類型 (income / expense)"
+        string note "備註"
+        datetime date "交易日期"
+        datetime created_at
+    }
+
+    BUDGET {
+        int id PK
+        int category_id FK "所屬分類"
+        float amount "預算金額"
+        string period "週期 (如: 2024-04)"
+        datetime created_at
+    }
 ```
-
----
 
 ## 2. 資料表詳細說明
 
-### 2-1. `recipes`（食譜）
+### Account (帳戶表)
+- `id`: INTEGER, PRIMARY KEY, AUTOINCREMENT
+- `name`: TEXT, NOT NULL (帳戶名稱)
+- `balance`: REAL, DEFAULT 0.0 (餘額)
+- `created_at`: DATETIME, DEFAULT CURRENT_TIMESTAMP
 
-| 欄位名稱 | 型別 | 必填 | 說明 |
-|----------|------|------|------|
-| `id` | INTEGER | ✅ | 主鍵，自動遞增 |
-| `name` | TEXT | ✅ | 食譜名稱（例如：紅燒肉） |
-| `description` | TEXT | ❌ | 食譜簡介或備註 |
-| `servings` | INTEGER | ❌ | 幾人份（預設 2） |
-| `category` | TEXT | ❌ | 分類標籤（例如：台式、甜點） |
-| `created_at` | DATETIME | ✅ | 建立時間（自動填入） |
-| `updated_at` | DATETIME | ✅ | 最後更新時間（自動填入） |
+### Category (分類表)
+- `id`: INTEGER, PRIMARY KEY, AUTOINCREMENT
+- `name`: TEXT, NOT NULL (分類名稱)
+- `type`: TEXT, NOT NULL (類型: income 或 expense)
+- `created_at`: DATETIME, DEFAULT CURRENT_TIMESTAMP
 
-- **Primary Key**：`id`
-- **關聯**：一筆 `recipe` 可對應多筆 `ingredients` 與 `steps`
+### Transaction (交易表)
+- `id`: INTEGER, PRIMARY KEY, AUTOINCREMENT
+- `account_id`: INTEGER, FOREIGN KEY REFERENCES Account(id)
+- `category_id`: INTEGER, FOREIGN KEY REFERENCES Category(id)
+- `amount`: REAL, NOT NULL (金額)
+- `type`: TEXT, NOT NULL (類型: income 或 expense)
+- `note`: TEXT (備註)
+- `date`: DATETIME, NOT NULL (交易日期)
+- `created_at`: DATETIME, DEFAULT CURRENT_TIMESTAMP
 
----
+### Budget (預算表)
+- `id`: INTEGER, PRIMARY KEY, AUTOINCREMENT
+- `category_id`: INTEGER, FOREIGN KEY REFERENCES Category(id)
+- `amount`: REAL, NOT NULL (預算金額)
+- `period`: TEXT, NOT NULL (預算週期，格式如 YYYY-MM)
+- `created_at`: DATETIME, DEFAULT CURRENT_TIMESTAMP
 
-### 2-2. `ingredients`（材料）
+## 3. SQL 建表語法 (SQLite)
+檔案儲存在 `database/schema.sql`。
 
-| 欄位名稱 | 型別 | 必填 | 說明 |
-|----------|------|------|------|
-| `id` | INTEGER | ✅ | 主鍵，自動遞增 |
-| `recipe_id` | INTEGER | ✅ | 外鍵，對應 `recipes.id` |
-| `name` | TEXT | ✅ | 材料名稱（例如：豬五花肉） |
-| `amount` | TEXT | ❌ | 份量（例如：300g、2 大匙） |
-| `order_no` | INTEGER | ✅ | 顯示順序（從 1 開始） |
-
-- **Primary Key**：`id`
-- **Foreign Key**：`recipe_id` → `recipes.id`（CASCADE DELETE）
-
----
-
-### 2-3. `steps`（步驟）
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
-|----------|------|------|------|
-| `id` | INTEGER | ✅ | 主鍵，自動遞增 |
-| `recipe_id` | INTEGER | ✅ | 外鍵，對應 `recipes.id` |
-| `order_no` | INTEGER | ✅ | 步驟編號（從 1 開始） |
-| `instruction` | TEXT | ✅ | 步驟說明文字 |
-| `wait_minutes` | INTEGER | ❌ | 此步驟需要等待的分鐘數（0 表示不需要等待） |
-
-- **Primary Key**：`id`
-- **Foreign Key**：`recipe_id` → `recipes.id`（CASCADE DELETE）
-- **核心功能**：`wait_minutes` 欄位對應 PRD 中「步驟所需等待時間」的差異化功能
-
----
-
-## 3. SQL 建表語法
-
-詳見 `database/schema.sql`。
+## 4. Python Model 程式碼
+使用 SQLAlchemy 實作，檔案儲存在 `app/models/` 目錄下：
+- `app/models/account.py`
+- `app/models/category.py`
+- `app/models/transaction.py`
+- `app/models/budget.py`

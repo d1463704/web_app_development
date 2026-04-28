@@ -37,7 +37,7 @@ def create_app():
 
     # 建立所有資料表（若不存在）
     with app.app_context():
-        from app.models import Recipe, Ingredient, Step  # noqa: F401
+        from app.models import Account, Category, Transaction, Budget  # noqa: F401
         db.create_all()
 
     # 註冊路由 Blueprint
